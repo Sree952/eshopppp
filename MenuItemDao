@@ -1,0 +1,13 @@
+
+package com.wipro.eshop.dao; 
+ 
+import java.util.List; 
+import com.wipro.eshop.model.MenuItem; 
+ 
+public interface MenuItemDao { 
+    List<MenuItem> getMenuItemListAdmin(); 
+    List<MenuItem> getMenuItemListCustomer(); 
+    MenuItem getMenuItem(long menuItemId); 
+    void modifyMenuItem(MenuItem menuItem); 
+ long addMenuItem(MenuItem menuItem);
+}
