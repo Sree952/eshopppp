@@ -1,0 +1,135 @@
+package com.wipro.eshop.dao; 
+ 
+import java.sql.*; 
+import java.util.*; 
+import com.wipro.eshop.model.MenuItem; 
+ 
+public class MenuItemDaoSqlImpl implements MenuItemDao { 
+ 
+    @Override 
+    public List<MenuItem> getMenuItemListAdmin() { 
+        List<MenuItem> itemList = new ArrayList<>(); 
+        try (Connection conn = ConnectionHandler.getConnection()) { 
+            String sql = "SELECT * FROM menu_item"; 
+            PreparedStatement ps = conn.prepareStatement(sql); 
+            ResultSet rs = ps.executeQuery(); 
+ 
+            while (rs.next()) { 
+                MenuItem item = new MenuItem( 
+                    rs.getLong("me_id"), 
+                    rs.getString("me_name"), 
+                    rs.getFloat("me_price"), 
+                    rs.getString("me_active").equalsIgnoreCase("Yes"), 
+                    rs.getDate("me_date_of_launch"), 
+                    rs.getString("me_category"), 
+                    rs.getString("me_free_delivery").equalsIgnoreCase("Yes") 
+                ); 
+                itemList.add(item); 
+            } 
+        } catch (Exception e) { 
+            e.printStackTrace(); 
+        } 
+        return itemList; 
+    } 
+ 
+    @Override 
+    public List<MenuItem> getMenuItemListCustomer() { 
+        List<MenuItem> itemList = new ArrayList<>(); 
+        try (Connection conn = ConnectionHandler.getConnection()) { 
+            String sql = "SELECT * FROM menu_item WHERE me_active = 'Yes' AND 
+me_date_of_launch <= CURDATE()"; 
+            PreparedStatement ps = conn.prepareStatement(sql); 
+            ResultSet rs = ps.executeQuery(); 
+ 
+            while (rs.next()) { 
+                MenuItem item = new MenuItem( 
+                    rs.getLong("me_id"), 
+                    rs.getString("me_name"), 
+                    rs.getFloat("me_price"), 
+                    true, 
+                    rs.getDate("me_date_of_launch"), 
+                    rs.getString("me_category"), 
+                    rs.getString("me_free_delivery").equalsIgnoreCase("Yes") 
+                ); 
+                itemList.add(item); 
+            } 
+        } catch (Exception e) { 
+            e.printStackTrace(); 
+        } 
+        return itemList; 
+    } 
+ 
+    @Override 
+    public MenuItem getMenuItem(long menuItemId) { 
+        MenuItem item = null; 
+        try (Connection conn = ConnectionHandler.getConnection()) { 
+            String sql = "SELECT * FROM menu_item WHERE me_id = ?"; 
+            PreparedStatement ps = conn.prepareStatement(sql); 
+            ps.setLong(1, menuItemId); 
+            ResultSet rs = ps.executeQuery(); 
+ 
+            if (rs.next()) { 
+                item = new MenuItem( 
+                    rs.getLong("me_id"), 
+                    rs.getString("me_name"), 
+                    rs.getFloat("me_price"), 
+                    rs.getString("me_active").equalsIgnoreCase("Yes"), 
+                    rs.getDate("me_date_of_launch"), 
+                    rs.getString("me_category"), 
+                    rs.getString("me_free_delivery").equalsIgnoreCase("Yes") 
+                ); 
+            } 
+        } catch (Exception e) { 
+            e.printStackTrace(); 
+        } 
+        return item; 
+    } 
+ 
+    @Override 
+    public void modifyMenuItem(MenuItem menuItem) { 
+        try (Connection conn = ConnectionHandler.getConnection()) { 
+            String sql = "UPDATE menu_item SET me_name=?, me_price=?, me_active=?, 
+me_date_of_launch=?, me_category=?, me_free_delivery=? WHERE me_id=?"; 
+            PreparedStatement ps = conn.prepareStatement(sql); 
+            ps.setString(1, menuItem.getName()); 
+            ps.setFloat(2, menuItem.getPrice()); 
+            ps.setString(3, menuItem.isActive() ? "Yes" : "No"); 
+            ps.setDate(4, new 
+java.sql.Date(menuItem.getDateOfLaunch().getTime())); 
+            ps.setString(5, menuItem.getCategory()); 
+            ps.setString(6, menuItem.isFreeDelivery() ? "Yes" : "No"); 
+            ps.setLong(7, menuItem.getId()); 
+            ps.executeUpdate(); 
+        } catch (Exception e) { 
+            e.printStackTrace(); 
+        } 
+    } 
+ 
+    @Override 
+    public long addMenuItem(MenuItem menuItem) { 
+        long generatedId = -1; 
+        try (Connection conn = ConnectionHandler.getConnection()) { 
+            String sql = "INSERT INTO menu_item (me_name, me_price, me_active, 
+me_date_of_launch, me_category, me_free_delivery) " + 
+                         "VALUES (?, ?, ?, ?, ?, ?)"; 
+            PreparedStatement ps = conn.prepareStatement(sql, 
+Statement.RETURN_GENERATED_KEYS); 
+            ps.setString(1, menuItem.getName()); 
+            ps.setFloat(2, menuItem.getPrice()); 
+            ps.setString(3, menuItem.isActive() ? "Yes" : "No"); 
+            ps.setDate(4, new 
+java.sql.Date(menuItem.getDateOfLaunch().getTime())); 
+            ps.setString(5, menuItem.getCategory()); 
+            ps.setString(6, menuItem.isFreeDelivery() ? "Yes" : "No"); 
+ 
+            ps.executeUpdate(); 
+            ResultSet rs = ps.getGeneratedKeys(); 
+            if (rs.next()) { 
+                generatedId = rs.getLong(1); 
+            } 
+        } catch (Exception e) { 
+            e.printStackTrace(); 
+        } 
+        return generatedId;
+}
+}
